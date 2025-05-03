@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import androidx.fragment.app.Fragment;
 import com.google.zxing.BarcodeFormat;
@@ -28,6 +27,12 @@ public class VerifyFragment extends Fragment {
         generateQr();
 
         generateQrButton.setOnClickListener(v -> generateQr());
+
+        root.postDelayed(() -> {
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).showOverlay(false);
+            }
+        }, 3000);
 
         return root;
     }

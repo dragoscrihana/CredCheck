@@ -1,8 +1,14 @@
 package com.example.credcheck;
 
 import android.os.Bundle;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+
+import com.airbnb.lottie.LottieAnimationView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
@@ -33,4 +39,30 @@ public class MainActivity extends AppCompatActivity {
             navView.setSelectedItemId(R.id.nav_verify);
         }
     }
+
+    public void showOverlay(boolean isAccepted) {
+        View dimOverlay = findViewById(R.id.globalDimOverlay);
+        LinearLayout overlayContainer = findViewById(R.id.globalOverlayContainer);
+        LottieAnimationView animationView = findViewById(R.id.globalAnimationView);
+        TextView statusText = findViewById(R.id.globalStatusText);
+
+        dimOverlay.setVisibility(View.VISIBLE);
+        overlayContainer.setVisibility(View.VISIBLE);
+
+        if (isAccepted) {
+            animationView.setAnimation(R.raw.success);
+            statusText.setText("Accepted");
+        } else {
+            animationView.setAnimation(R.raw.failed);
+            statusText.setText("Denied");
+        }
+
+        animationView.playAnimation();
+
+        overlayContainer.setOnClickListener(v -> {
+            dimOverlay.setVisibility(View.GONE);
+            overlayContainer.setVisibility(View.GONE);
+        });
+    }
+
 }
