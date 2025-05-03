@@ -1,13 +1,10 @@
 <resources>
-    <!-- CredCheck Branding -->
     <color name="credcheck_blue">#007BFF</color>
     <color name="credcheck_blue_dark">#005BB5</color>
 
-    <!-- Light theme base -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
 
-    <!-- Dark theme base -->
     <color name="dark_background">#121212</color>
     <color name="dark_surface">#1E1E1E</color>
 

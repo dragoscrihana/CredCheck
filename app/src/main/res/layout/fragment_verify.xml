@@ -6,7 +6,6 @@
     android:gravity="center_horizontal"
     android:background="?android:windowBackground">
 
-    <!-- Peeking CredCheck Logo -->
     <ImageView
         android:id="@+id/topLogo"
         android:layout_width="140dp"
@@ -15,7 +14,6 @@
         android:src="@drawable/credcheck_logo"
         android:contentDescription="Logo" />
 
-    <!-- QR Card -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -44,7 +42,6 @@
         android:textAlignment="center"/>
 
 
-    <!-- Regenerate Button -->
     <Button
         android:id="@+id/generateQrButton"
         android:layout_width="wrap_content"
