@@ -10,11 +10,17 @@ import android.widget.*;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 
-public class SettingsFragment extends Fragment {
+import com.google.android.gms.maps.*;
+import com.google.android.gms.maps.model.*;
+
+public class SettingsFragment extends Fragment implements OnMapReadyCallback {
 
     private Spinner themeSpinner;
     private TextView versionText;
     private Button logoutButton;
+    private GoogleMap map;
+    private Marker locationMarker;
+    private static final LatLng DEFAULT_LOCATION = new LatLng(44.4268, 26.1025); // Bucharest
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -24,10 +30,8 @@ public class SettingsFragment extends Fragment {
         versionText = root.findViewById(R.id.versionText);
         logoutButton = root.findViewById(R.id.logoutButton);
 
-        // Set version
         versionText.setText("1.0.0");
 
-        // Setup theme spinner
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 requireContext(),
                 R.array.theme_options,
@@ -36,12 +40,10 @@ public class SettingsFragment extends Fragment {
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         themeSpinner.setAdapter(adapter);
 
-        // Load saved preference
         SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
         String currentTheme = prefs.getString("theme", "light");
         themeSpinner.setSelection(currentTheme.equals("light") ? 0 : 1);
 
-        // Apply theme change
         themeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -59,14 +61,71 @@ public class SettingsFragment extends Fragment {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) { }
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        // Log out (just a placeholder for now)
         logoutButton.setOnClickListener(v ->
                 Toast.makeText(getContext(), "Logged out (simulate)", Toast.LENGTH_SHORT).show()
         );
 
+        SupportMapFragment mapFragment = (SupportMapFragment)
+                getChildFragmentManager().findFragmentById(R.id.map_container);
+
+        if (mapFragment == null) {
+            mapFragment = SupportMapFragment.newInstance();
+            getChildFragmentManager().beginTransaction()
+                    .replace(R.id.map_container, mapFragment)
+                    .commit();
+        }
+
+        mapFragment.getMapAsync(this);
+
         return root;
     }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        this.map = googleMap;
+
+        SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
+        double lat = Double.longBitsToDouble(prefs.getLong("location_lat", Double.doubleToLongBits(DEFAULT_LOCATION.latitude)));
+        double lng = Double.longBitsToDouble(prefs.getLong("location_lng", Double.doubleToLongBits(DEFAULT_LOCATION.longitude)));
+        LatLng storedLocation = new LatLng(lat, lng);
+
+        locationMarker = map.addMarker(new MarkerOptions()
+                .position(storedLocation)
+                .title("Verifier Location")
+                .draggable(true));
+
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(storedLocation, 15f));
+
+        map.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
+            @Override public void onMarkerDragStart(Marker marker) {}
+            @Override public void onMarkerDrag(Marker marker) {}
+            @Override
+            public void onMarkerDragEnd(Marker marker) {
+                saveLocation(marker.getPosition());
+            }
+        });
+
+        map.setOnMapClickListener(latLng -> {
+            if (locationMarker != null) locationMarker.remove();
+            locationMarker = map.addMarker(new MarkerOptions()
+                    .position(latLng)
+                    .title("Verifier Location")
+                    .draggable(true));
+            saveLocation(latLng);
+        });
+    }
+
+    private void saveLocation(LatLng latLng) {
+        SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putLong("location_lat", Double.doubleToLongBits(latLng.latitude));
+        editor.putLong("location_lng", Double.doubleToLongBits(latLng.longitude));
+        editor.apply();
+        Toast.makeText(getContext(), "Location updated", Toast.LENGTH_SHORT).show();
+    }
+
+
 }

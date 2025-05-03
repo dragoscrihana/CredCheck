@@ -14,7 +14,6 @@ public class MainActivity extends AppCompatActivity {
 
         BottomNavigationView navView = findViewById(R.id.bottom_navigation);
 
-        // Handle nav item selection
         navView.setOnItemSelectedListener(item -> {
             Fragment selectedFragment = null;
             if (item.getItemId() == R.id.nav_verify) {
@@ -30,9 +29,8 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
-        // ✅ Only set default on first launch (not after recreate)
         if (savedInstanceState == null) {
-            navView.setSelectedItemId(R.id.nav_verify); // This triggers nav listener
+            navView.setSelectedItemId(R.id.nav_verify);
         }
     }
 }

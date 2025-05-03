@@ -25,7 +25,7 @@ public class VerifyFragment extends Fragment {
         qrImage = root.findViewById(R.id.qrImage);
         generateQrButton = root.findViewById(R.id.generateQrButton);
 
-        generateQr(); // Generate QR immediately
+        generateQr();
 
         generateQrButton.setOnClickListener(v -> generateQr());
 
