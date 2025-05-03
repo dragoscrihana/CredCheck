@@ -1,0 +1,6 @@
+<resources>
+    <!-- Custom Spinner View Style -->
+    <style name="CustomSpinnerStyle">
+        <item name="android:popupBackground">@drawable/spinner_dropdown_background</item>
+    </style>
+</resources>

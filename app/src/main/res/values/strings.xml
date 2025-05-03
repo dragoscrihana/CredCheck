@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">CredCheck</string>
+    <string name="nav_verify">Verify</string>
+    <string name="nav_history">History</string>
+    <string name="nav_settings">Settings</string>
+    <string-array name="theme_options">
+        <item>Light</item>
+        <item>Dark</item>
+    </string-array>
+
+</resources>

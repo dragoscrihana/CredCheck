@@ -1,0 +1,19 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.CredCheck" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary branding color -->
+        <item name="colorPrimary">@color/credcheck_blue</item>
+        <item name="colorPrimaryVariant">@color/credcheck_blue_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Surface + background -->
+        <item name="android:windowBackground">@color/white</item> <!-- for light -->
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnBackground">@color/black</item>
+        <item name="colorOnSurface">@color/black</item>
+        <item name="android:textColorPrimary">@color/black</item>
+        <item name="android:textColorHint">@color/hint_color_light</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor" tools:targetApi="l">@android:color/transparent</item>
+    </style>
+</resources>

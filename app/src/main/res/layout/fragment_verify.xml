@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:background="?android:windowBackground">
+
+    <!-- Peeking CredCheck Logo -->
+    <ImageView
+        android:id="@+id/topLogo"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:layout_marginBottom="-60dp"
+        android:src="@drawable/credcheck_logo"
+        android:contentDescription="Logo" />
+
+    <!-- QR Card -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@drawable/qr_card_bg"
+        android:elevation="4dp"
+        android:layout_marginBottom="32dp">
+
+        <ImageView
+            android:id="@+id/qrImage"
+            android:layout_width="280dp"
+            android:layout_height="280dp"
+            android:contentDescription="QR Code" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/qrSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Scan this code using your EUDI Wallet to begin verification."
+        android:textColor="?android:textColorPrimary"
+        android:textSize="14sp"
+        android:layout_marginBottom="16dp"
+        android:gravity="center"
+        android:textAlignment="center"/>
+
+
+    <!-- Regenerate Button -->
+    <Button
+        android:id="@+id/generateQrButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Regenerate"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#007BFF"
+        android:paddingLeft="32dp"
+        android:paddingRight="32dp"
+        android:textStyle="bold"
+        android:elevation="2dp" />
+</LinearLayout>
