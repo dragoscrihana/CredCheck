@@ -11,6 +11,11 @@
         <item name="android:textColorPrimary">@color/white</item>
         <item name="android:textColorHint">@color/hint_color_dark</item>
 
+        <item name="cardBackgroundColor">#1E1E1E</item>
+        <item name="cardStrokeColor">#444444</item>
+        <item name="eventBackgroundColor">#2C2C2C</item>
+        <item name="textPrimary">#FFFFFF</item>
+        <item name="textSecondary">#BBBBBB</item>
 
 
         <item name="android:statusBarColor">@android:color/transparent</item>

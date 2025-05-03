@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="cardBackgroundColor" format="color"/>
+    <attr name="cardStrokeColor" format="color"/>
+    <attr name="eventBackgroundColor" format="color"/>
+    <attr name="textPrimary" format="color"/>
+    <attr name="textSecondary" format="color"/>
+</resources>
