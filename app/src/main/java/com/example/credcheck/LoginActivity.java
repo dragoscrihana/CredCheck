@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class LoginActivity extends AppCompatActivity {
@@ -12,6 +14,8 @@ public class LoginActivity extends AppCompatActivity {
     private EditText usernameInput, passwordInput;
     private Button loginButton;
     private TextView forgotPassword;
+
+    private UserRepository userRepo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,12 +27,18 @@ public class LoginActivity extends AppCompatActivity {
         loginButton = findViewById(R.id.loginButton);
         forgotPassword = findViewById(R.id.forgotPassword);
 
+        userRepo = new UserRepository(this);
+
         loginButton.setOnClickListener(v -> {
-            String username = usernameInput.getText().toString().trim();
+            String username = usernameInput.getText().toString();
             String password = passwordInput.getText().toString();
 
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-            finish();
+            if (userRepo.validateLogin(username, password)) {
+                startActivity(new Intent(this, MainActivity.class));
+                finish();
+            } else {
+                Toast.makeText(this, "Invalid credentials", Toast.LENGTH_SHORT).show();
+            }
         });
 
         forgotPassword.setOnClickListener(v -> {
