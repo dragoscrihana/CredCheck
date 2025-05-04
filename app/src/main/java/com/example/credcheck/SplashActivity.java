@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 
 public class SplashActivity extends AppCompatActivity {
 
-    private static final int SPLASH_TIME = 2000; // 2 seconds
+    private static final int SPLASH_TIME = 2000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

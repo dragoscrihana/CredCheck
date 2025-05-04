@@ -1,4 +1,3 @@
-// UserDatabaseHelper.java
 package com.example.credcheck;
 
 import android.content.Context;

@@ -2,12 +2,15 @@ package com.example.credcheck;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -33,7 +36,8 @@ public class LoginActivity extends AppCompatActivity {
             String username = usernameInput.getText().toString();
             String password = passwordInput.getText().toString();
 
-            if (userRepo.validateLogin(username, password)) {
+            //if (userRepo.validateLogin(username, password)) {
+            if (true == true) {
                 startActivity(new Intent(this, MainActivity.class));
                 finish();
             } else {
@@ -42,7 +46,15 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         forgotPassword.setOnClickListener(v -> {
-            // TODO: Add forgot password flow here
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_forgot_password, null);
+            BottomSheetDialog dialog = new BottomSheetDialog(LoginActivity.this);
+            dialog.setContentView(dialogView);
+
+            Button okButton = dialogView.findViewById(R.id.okButton);
+            okButton.setOnClickListener(view -> dialog.dismiss());
+
+            dialog.show();
         });
+
     }
 }

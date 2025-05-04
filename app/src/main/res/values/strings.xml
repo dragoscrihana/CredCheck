@@ -8,4 +8,9 @@
         <item>Dark</item>
     </string-array>
 
+    <string name="forgot_password_message">
+    Please contact the administrator at <b>mihai.crihana@mta.ro</b>
+    </string>
+
+
 </resources>

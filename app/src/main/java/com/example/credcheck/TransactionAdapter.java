@@ -36,13 +36,11 @@ public class TransactionAdapter extends ArrayAdapter<TransactionModel> {
         transactionIdView.setText(transaction.getTransactionId());
         lastUpdatedView.setText("Last updated: " + transaction.getLastUpdated());
 
-        // Toggle transaction expand/collapse
         convertView.setOnClickListener(v -> {
             transaction.setExpanded(!transaction.isExpanded());
             notifyDataSetChanged();
         });
 
-        // Show/hide events
         eventsContainer.removeAllViews();
         if (transaction.isExpanded()) {
             eventsContainer.setVisibility(View.VISIBLE);
@@ -53,7 +51,6 @@ public class TransactionAdapter extends ArrayAdapter<TransactionModel> {
 
                 eventTitle.setText(event.getEvent() + " - " + event.getActor());
 
-                // Toggle event expand/collapse
                 eventView.setOnClickListener(view -> {
                     event.setExpanded(!event.isExpanded());
                     notifyDataSetChanged();
