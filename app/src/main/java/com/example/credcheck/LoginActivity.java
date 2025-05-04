@@ -1,6 +1,7 @@
 package com.example.credcheck;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -38,6 +39,12 @@ public class LoginActivity extends AppCompatActivity {
 
             //if (userRepo.validateLogin(username, password)) {
             if (true == true) {
+                SharedPreferences prefs = getSharedPreferences("credcheck_prefs", MODE_PRIVATE);
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString("logged_in_user", username);
+                editor.putString("account_type", userRepo.getAccountType(username));
+                editor.apply();
+
                 startActivity(new Intent(this, MainActivity.class));
                 finish();
             } else {

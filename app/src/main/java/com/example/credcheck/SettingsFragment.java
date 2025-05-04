@@ -1,6 +1,7 @@
 package com.example.credcheck;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -64,9 +65,15 @@ public class SettingsFragment extends Fragment implements OnMapReadyCallback {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
-        logoutButton.setOnClickListener(v ->
-                Toast.makeText(getContext(), "Logged out (simulate)", Toast.LENGTH_SHORT).show()
-        );
+        logoutButton.setOnClickListener(v -> {
+            SharedPreferences prefs1 = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
+            prefs1.edit().clear().apply();
+
+            Intent intent = new Intent(requireContext(), LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        });
+
 
         SupportMapFragment mapFragment = (SupportMapFragment)
                 getChildFragmentManager().findFragmentById(R.id.map_container);
