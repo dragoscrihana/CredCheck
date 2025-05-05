@@ -128,6 +128,7 @@ public class VerifyFragment extends Fragment {
 
     private void handleFinalStatus(String status) {
         requireActivity().runOnUiThread(() -> {
+            saveTransactionStatus(transactionId, status);
             if ("ACCEPTED".equalsIgnoreCase(status)) {
                 ((MainActivity) getActivity()).showOverlay(true);
                 Log.d("VerifyFragment", "Overlay triggered with status: " + status);
@@ -154,6 +155,13 @@ public class VerifyFragment extends Fragment {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private void saveTransactionStatus(String txId, String status) {
+        SharedPreferences prefs = requireContext().getSharedPreferences("history", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString(txId, status);
+        editor.apply();
     }
 
     @Override

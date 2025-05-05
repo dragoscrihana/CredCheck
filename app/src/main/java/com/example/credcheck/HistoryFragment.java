@@ -27,8 +27,17 @@ public class HistoryFragment extends Fragment {
 
         PieChart pieChart = root.findViewById(R.id.pieChart);
 
-        int passed = 11;
-        int failed = 6;
+        SharedPreferences prefs = requireContext().getSharedPreferences("history", Context.MODE_PRIVATE);
+        Map<String, ?> allEntries = prefs.getAll();
+
+        int passed = 0;
+        int failed = 0;
+
+        for (Object value : allEntries.values()) {
+            String status = String.valueOf(value);
+            if ("ACCEPTED".equalsIgnoreCase(status)) passed++;
+            else if ("DENIED".equalsIgnoreCase(status)) failed++;
+        }
 
         List<PieEntry> entries = new ArrayList<>();
         entries.add(new PieEntry(passed, "Passed"));
