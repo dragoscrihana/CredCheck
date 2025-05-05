@@ -1,5 +1,7 @@
 package com.example.credcheck;
 
+import java.util.UUID;
+
 public class PresentationDefinitionProvider {
 
     public static String getPresentationDefinition(String accountType) {
@@ -14,13 +16,14 @@ public class PresentationDefinitionProvider {
     }
 
     private static String getRestaurantDefinition() {
+        String definitionId = UUID.randomUUID().toString();
         return "{\n" +
                 "  \"type\": \"vp_token\",\n" +
                 "  \"presentation_definition\": {\n" +
-                "    \"id\": \"2ec7e307-81aa-490c-a194-3f22640e919d\",\n" +
+                "    \"id\": \"" + definitionId + "\",\n" +
                 "    \"input_descriptors\": [\n" +
                 "      {\n" +
-                "        \"id\": \"f3382cfb-e2d8-4bac-abdb-eb91daf65152\",\n" +
+                "        \"id\": \"2ac9bc52-d02b-4f64-8b4c-fa89ac17b873\",\n" +
                 "        \"name\": \"Person Identification Data (PID)\",\n" +
                 "        \"purpose\": \"\",\n" +
                 "        \"format\": {\n" +
@@ -32,13 +35,13 @@ public class PresentationDefinitionProvider {
                 "        \"constraints\": {\n" +
                 "          \"fields\": [\n" +
                 "            { \"path\": [\"$.vct\"], \"filter\": {\"type\": \"string\", \"const\": \"urn:eu.europa.ec.eudi:pid:1\"} },\n" +
-                "            { \"path\": [\"$.age_equal_or_over.18\"], \"intent_to_retain\": false }\n" +
+                "            { \"path\": [\"$.age_in_years\"], \"intent_to_retain\": false }\n" +
                 "          ]\n" +
                 "        }\n" +
                 "      }\n" +
                 "    ]\n" +
                 "  },\n" +
-                "  \"nonce\": \"be95d067-f674-46b5-834e-78633c605e98\",\n" +
+                "  \"nonce\": \"fd8871e3-20df-4090-a832-0fff6d2b7ed1\",\n" +
                 "  \"request_uri_method\": \"get\"\n" +
                 "}";
     }
