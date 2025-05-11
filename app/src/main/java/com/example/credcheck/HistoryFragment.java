@@ -17,22 +17,114 @@ import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.utils.ColorTemplate;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class HistoryFragment extends Fragment {
+
+    private ListView listView;
+    private TransactionAdapter adapter;
+    private final List<TransactionModel> transactions = new ArrayList<>();
+
+    private static final String API_URL = "https://glowing-gradually-midge.ngrok-free.app/ui/presentations/recent";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_history, container, false);
 
+        listView = root.findViewById(R.id.historyListView);
+        adapter = new TransactionAdapter(requireContext(), transactions);
+        listView.setAdapter(adapter);
+
+        setupPieChart(root);
+        fetchTransactions();
+
+        return root;
+    }
+
+    private void fetchTransactions() {
+        new Thread(() -> {
+            try {
+                URL url = new URL(API_URL);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+
+                int code = conn.getResponseCode();
+                if (code == HttpURLConnection.HTTP_OK) {
+                    InputStream is = conn.getInputStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+
+                    parseTransactions(response.toString());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    private void parseTransactions(String json) {
+        try {
+            JSONArray array = new JSONArray(json);
+            List<TransactionModel> newList = new ArrayList<>();
+
+            for (int i = 0; i < array.length(); i++) {
+                JSONObject tx = array.getJSONObject(i);
+                String transactionId = tx.getString("transactionId");
+                long lastUpdated = tx.getLong("lastUpdated");
+
+                List<EventModel> events = new ArrayList<>();
+                JSONArray eventArray = tx.getJSONArray("events");
+
+                Locale locale = new Locale("ro", "RO");
+                SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm", locale);
+
+                for (int j = 0; j < eventArray.length(); j++) {
+                    JSONObject ev = eventArray.getJSONObject(j);
+                    String event = ev.getString("event");
+                    String actor = ev.getString("actor");
+                    long timestamp = ev.getLong("timestamp");
+
+                    String formattedTime = timeFormat.format(new Date(timestamp));
+
+                    JSONObject payload = ev.optJSONObject("payload");
+                    String details = payload != null ? payload.toString(2) : "";
+
+                    events.add(new EventModel(event, actor, formattedTime, details));
+                }
+
+                String date = timeFormat.format(new Date(lastUpdated));
+                newList.add(new TransactionModel(transactionId, date, events));
+            }
+
+            requireActivity().runOnUiThread(() -> {
+                transactions.clear();
+                transactions.addAll(newList);
+                adapter.notifyDataSetChanged();
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setupPieChart(View root) {
         PieChart pieChart = root.findViewById(R.id.pieChart);
 
         SharedPreferences prefs = requireContext().getSharedPreferences("history", Context.MODE_PRIVATE);
         Map<String, ?> allEntries = prefs.getAll();
 
-        int passed = 0;
-        int failed = 0;
-
+        int passed = 0, failed = 0;
         for (Object value : allEntries.values()) {
             String status = String.valueOf(value);
             if ("ACCEPTED".equalsIgnoreCase(status)) passed++;
@@ -47,21 +139,15 @@ public class HistoryFragment extends Fragment {
         dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
         dataSet.setValueTextSize(14f);
         dataSet.setValueTextColor(getColorBasedOnTheme());
-        pieChart.setDrawEntryLabels(false);
-
         dataSet.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
                 return String.format(Locale.US, "%.2f", value);
             }
         });
-        dataSet.setColors(ColorTemplate.MATERIAL_COLORS);
-        dataSet.setValueTextSize(14f);
-        dataSet.setValueTextColor(getColorBasedOnTheme());
 
         PieData pieData = new PieData(dataSet);
         pieChart.setData(pieData);
-
         pieChart.setUsePercentValues(true);
         pieChart.setDrawHoleEnabled(true);
         pieChart.setHoleRadius(60f);
@@ -82,37 +168,11 @@ public class HistoryFragment extends Fragment {
         legend.setDrawInside(false);
 
         pieChart.invalidate();
-
-        ListView listView = root.findViewById(R.id.historyListView);
-        List<TransactionModel> transactions = getDummyData();
-        TransactionAdapter adapter = new TransactionAdapter(requireContext(), transactions);
-        listView.setAdapter(adapter);
-
-        return root;
     }
 
     private int getColorBasedOnTheme() {
         SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
         String theme = prefs.getString("theme", "light");
-
-        if (theme.equals("dark")) {
-            return getResources().getColor(android.R.color.white, null);
-        } else {
-            return getResources().getColor(android.R.color.black, null);
-        }
-    }
-
-    private List<TransactionModel> getDummyData() {
-        List<EventModel> events = new ArrayList<>();
-        events.add(new EventModel("Transaction initialized", "Verifier", 1746291795075L, "request_uri: /wallet/request.jwt/..."));
-        events.add(new EventModel("Request object retrieved", "Wallet", 1746291811098L, "jwt: eyJra..."));
-        events.add(new EventModel("Wallet response posted", "Wallet", 1746291816994L, "vp_token: eyJhb..."));
-
-        List<TransactionModel> transactions = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            transactions.add(new TransactionModel("GJ8HUnJR4T...", "2025-05-03 14:56", events));
-        }
-
-        return transactions;
+        return getResources().getColor(theme.equals("dark") ? android.R.color.white : android.R.color.black, null);
     }
 }
