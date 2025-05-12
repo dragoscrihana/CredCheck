@@ -43,13 +43,12 @@ public class HistoryFragment extends Fragment {
         adapter = new TransactionAdapter(requireContext(), transactions);
         listView.setAdapter(adapter);
 
-        setupPieChart(root);
-        fetchTransactions();
+        fetchTransactions(root);
 
         return root;
     }
 
-    private void fetchTransactions() {
+    private void fetchTransactions(View root) {
         new Thread(() -> {
             try {
                 URL url = new URL(API_URL);
@@ -66,7 +65,7 @@ public class HistoryFragment extends Fragment {
                         response.append(line);
                     }
 
-                    parseTransactions(response.toString());
+                    parseTransactions(response.toString(), root);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -74,16 +73,23 @@ public class HistoryFragment extends Fragment {
         }).start();
     }
 
-    private void parseTransactions(String json) {
+    private void parseTransactions(String json, View root) {
         try {
             JSONArray array = new JSONArray(json);
             List<TransactionModel> newList = new ArrayList<>();
+            int passed = 0;
+            int failed = 0;
 
             for (int i = 0; i < array.length(); i++) {
                 JSONObject tx = array.getJSONObject(i);
                 String transactionId = tx.getString("transactionId");
                 String status = tx.getString("status");
                 long lastUpdated = tx.getLong("lastUpdated");
+
+                if ("ACCEPTED".equalsIgnoreCase(status))
+                    passed++;
+                else if ("DENIED".equalsIgnoreCase(status))
+                    failed++;
 
                 List<EventModel> events = new ArrayList<>();
                 JSONArray eventArray = tx.getJSONArray("events");
@@ -110,10 +116,14 @@ public class HistoryFragment extends Fragment {
                 newList.add(new TransactionModel(transactionId, date, events, status));
             }
 
+            final int finalPassed = passed;
+            final int finalFailed = failed;
+
             requireActivity().runOnUiThread(() -> {
                 transactions.clear();
                 transactions.addAll(newList);
                 adapter.notifyDataSetChanged();
+                setupPieChart(root, finalPassed, finalFailed);
             });
 
         } catch (Exception e) {
@@ -121,18 +131,8 @@ public class HistoryFragment extends Fragment {
         }
     }
 
-    private void setupPieChart(View root) {
+    private void setupPieChart(View root, int passed, int failed) {
         PieChart pieChart = root.findViewById(R.id.pieChart);
-
-        SharedPreferences prefs = requireContext().getSharedPreferences("history", Context.MODE_PRIVATE);
-        Map<String, ?> allEntries = prefs.getAll();
-
-        int passed = 0, failed = 0;
-        for (Object value : allEntries.values()) {
-            String status = String.valueOf(value);
-            if ("ACCEPTED".equalsIgnoreCase(status)) passed++;
-            else if ("DENIED".equalsIgnoreCase(status)) failed++;
-        }
 
         List<PieEntry> entries = new ArrayList<>();
         entries.add(new PieEntry(passed, "Passed"));
@@ -168,6 +168,7 @@ public class HistoryFragment extends Fragment {
         legend.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
         legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
         legend.setOrientation(Legend.LegendOrientation.HORIZONTAL);
+        legend.setXEntrySpace(20f);
         legend.setDrawInside(false);
 
         pieChart.invalidate();
