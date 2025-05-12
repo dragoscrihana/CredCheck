@@ -32,10 +32,12 @@ public class TransactionAdapter extends ArrayAdapter<TransactionModel> {
 
         TextView transactionIdView = convertView.findViewById(R.id.transactionId);
         TextView lastUpdatedView = convertView.findViewById(R.id.lastUpdated);
+        TextView statusView = convertView.findViewById(R.id.status);
         LinearLayout eventsContainer = convertView.findViewById(R.id.eventsContainer);
 
         transactionIdView.setText(transaction.getTransactionId());
         lastUpdatedView.setText("Last updated: " + transaction.getLastUpdated());
+        statusView.setText("Status: " + transaction.getStatus());
 
         convertView.setOnClickListener(v -> {
             transaction.setExpanded(!transaction.isExpanded());

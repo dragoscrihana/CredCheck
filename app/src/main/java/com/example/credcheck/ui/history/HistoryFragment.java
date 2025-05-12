@@ -82,6 +82,7 @@ public class HistoryFragment extends Fragment {
             for (int i = 0; i < array.length(); i++) {
                 JSONObject tx = array.getJSONObject(i);
                 String transactionId = tx.getString("transactionId");
+                String status = tx.getString("status");
                 long lastUpdated = tx.getLong("lastUpdated");
 
                 List<EventModel> events = new ArrayList<>();
@@ -105,7 +106,8 @@ public class HistoryFragment extends Fragment {
                 }
 
                 String date = timeFormat.format(new Date(lastUpdated));
-                newList.add(new TransactionModel(transactionId, date, events));
+
+                newList.add(new TransactionModel(transactionId, date, events, status));
             }
 
             requireActivity().runOnUiThread(() -> {
