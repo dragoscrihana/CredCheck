@@ -1,4 +1,4 @@
-package com.example.credcheck;
+package com.example.credcheck.data;
 
 import android.content.ContentValues;
 import android.content.Context;

@@ -1,4 +1,4 @@
-package com.example.credcheck;
+package com.example.credcheck.util;
 
 import java.util.UUID;
 

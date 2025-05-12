@@ -1,4 +1,4 @@
-package com.example.credcheck;
+package com.example.credcheck.ui.settings;
 
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +11,8 @@ import android.widget.*;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.fragment.app.Fragment;
 
+import com.example.credcheck.R;
+import com.example.credcheck.ui.auth.LoginActivity;
 import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.model.*;
 
@@ -25,20 +27,20 @@ public class SettingsFragment extends Fragment implements OnMapReadyCallback {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_settings, container, false);
+        View root = inflater.inflate(com.example.credcheck.R.layout.fragment_settings, container, false);
 
-        themeSpinner = root.findViewById(R.id.themeSpinner);
-        versionText = root.findViewById(R.id.versionText);
-        logoutButton = root.findViewById(R.id.logoutButton);
+        themeSpinner = root.findViewById(com.example.credcheck.R.id.themeSpinner);
+        versionText = root.findViewById(com.example.credcheck.R.id.versionText);
+        logoutButton = root.findViewById(com.example.credcheck.R.id.logoutButton);
 
         versionText.setText("1.0.0");
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 requireContext(),
-                R.array.theme_options,
-                R.layout.spinner_item
+                com.example.credcheck.R.array.theme_options,
+                com.example.credcheck.R.layout.spinner_item
         );
-        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
+        adapter.setDropDownViewResource(com.example.credcheck.R.layout.spinner_dropdown_item);
         themeSpinner.setAdapter(adapter);
 
         SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
@@ -76,7 +78,7 @@ public class SettingsFragment extends Fragment implements OnMapReadyCallback {
 
 
         SupportMapFragment mapFragment = (SupportMapFragment)
-                getChildFragmentManager().findFragmentById(R.id.map_container);
+                getChildFragmentManager().findFragmentById(com.example.credcheck.R.id.map_container);
 
         if (mapFragment == null) {
             mapFragment = SupportMapFragment.newInstance();

@@ -1,4 +1,4 @@
-package com.example.credcheck;
+package com.example.credcheck.ui.auth;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,6 +11,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.credcheck.ui.main.MainActivity;
+import com.example.credcheck.R;
+import com.example.credcheck.data.UserRepository;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 public class LoginActivity extends AppCompatActivity {

@@ -1,4 +1,4 @@
-package com.example.credcheck;
+package com.example.credcheck.ui.verify;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -11,6 +11,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import androidx.fragment.app.Fragment;
 
+import com.example.credcheck.util.PresentationDefinitionProvider;
+import com.example.credcheck.R;
+import com.example.credcheck.ui.main.MainActivity;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.qrcode.QRCodeWriter;

@@ -1,4 +1,4 @@
-package com.example.credcheck;
+package com.example.credcheck.ui.history;
 
 import android.content.Context;
 import android.view.*;
@@ -6,6 +6,7 @@ import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.credcheck.R;
 import com.example.credcheck.model.EventModel;
 import com.example.credcheck.model.TransactionModel;
 

@@ -1,4 +1,4 @@
-package com.example.credcheck;
+package com.example.credcheck.ui.main;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
+
+import com.example.credcheck.R;
+import com.example.credcheck.ui.auth.LoginActivity;
 
 public class SplashActivity extends AppCompatActivity {
 

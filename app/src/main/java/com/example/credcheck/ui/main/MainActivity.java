@@ -1,4 +1,4 @@
-package com.example.credcheck;
+package com.example.credcheck.ui.main;
 
 import android.os.Bundle;
 import android.view.View;
@@ -9,6 +9,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.airbnb.lottie.LottieAnimationView;
+import com.example.credcheck.ui.history.HistoryFragment;
+import com.example.credcheck.R;
+import com.example.credcheck.ui.settings.SettingsFragment;
+import com.example.credcheck.ui.verify.VerifyFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
