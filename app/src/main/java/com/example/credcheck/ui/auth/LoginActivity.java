@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.credcheck.BuildConfig;
 import com.example.credcheck.R;
 import com.example.credcheck.ui.main.MainActivity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -28,9 +29,9 @@ import net.openid.appauth.TokenResponse;
 public class LoginActivity extends AppCompatActivity {
 
     private static final String AUTH_ENDPOINT =
-            "https://e9b5-109-166-132-30.ngrok-free.app/realms/verifier-realm/protocol/openid-connect/auth";
+            BuildConfig.BASE_URL + "/realms/verifier-realm/protocol/openid-connect/auth";
     private static final String TOKEN_ENDPOINT =
-            "https://e9b5-109-166-132-30.ngrok-free.app/realms/verifier-realm/protocol/openid-connect/token";
+            BuildConfig.BASE_URL + "/realms/verifier-realm/protocol/openid-connect/token";
     private static final String CLIENT_ID = "verifier-mobile";
     private static final String REDIRECT_URI = "com.example.credcheck://callback";
     private static final int RC_AUTH = 1001;

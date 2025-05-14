@@ -6,6 +6,10 @@ android {
     namespace 'com.example.credcheck'
     compileSdk 35
 
+    buildFeatures {
+        buildConfig true
+    }
+
     defaultConfig {
         applicationId "com.example.credcheck"
         minSdk 23
@@ -17,6 +21,8 @@ android {
         manifestPlaceholders = [
                 appAuthRedirectScheme: "com.example.credcheck"
         ]
+
+        buildConfigField "String", "BASE_URL", "\"https://1560-82-78-167-50.ngrok-free.app\""
     }
 
     buildTypes {

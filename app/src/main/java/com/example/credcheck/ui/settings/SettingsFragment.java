@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatDelegate;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.fragment.app.Fragment;
 
+import com.example.credcheck.BuildConfig;
 import com.example.credcheck.R;
 import com.example.credcheck.ui.auth.LoginActivity;
 import com.google.android.gms.maps.*;
@@ -76,7 +77,7 @@ public class SettingsFragment extends Fragment implements OnMapReadyCallback {
             String idToken = sharedPrefs.getString("id_token", null);
             sharedPrefs.edit().clear().apply();
 
-            String logoutUrl = "https://e9b5-109-166-132-30.ngrok-free.app/realms/verifier-realm/protocol/openid-connect/logout";
+            String logoutUrl = BuildConfig.BASE_URL + "/realms/verifier-realm/protocol/openid-connect/logout";
             if (idToken != null) {
                 logoutUrl += "?id_token_hint=" + idToken;
             }
