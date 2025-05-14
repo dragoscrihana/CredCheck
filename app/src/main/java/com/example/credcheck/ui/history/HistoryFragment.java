@@ -52,8 +52,15 @@ public class HistoryFragment extends Fragment {
         new Thread(() -> {
             try {
                 URL url = new URL(API_URL);
+                SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
+                String accessToken = prefs.getString("access_token", null);
+
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
+
+                if (accessToken != null) {
+                    conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+                }
 
                 int code = conn.getResponseCode();
                 if (code == HttpURLConnection.HTTP_OK) {

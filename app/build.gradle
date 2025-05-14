@@ -14,6 +14,9 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders = [
+                appAuthRedirectScheme: "com.example.credcheck"
+        ]
     }
 
     buildTypes {
@@ -29,6 +32,8 @@ android {
 }
 
 dependencies {
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'net.openid:appauth:0.11.1'
     implementation 'com.github.Dimezis:BlurView:version-2.0.3'
     implementation 'com.airbnb.android:lottie:6.0.0'
     implementation 'com.google.android.gms:play-services-maps:18.1.0'

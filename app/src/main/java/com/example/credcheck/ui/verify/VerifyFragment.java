@@ -47,15 +47,35 @@ public class VerifyFragment extends Fragment {
 
     private void generateQr() {
         SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
-        String accountType = prefs.getString("account_type", "restaurant");
+        String accessToken = prefs.getString("access_token", null);
+        String accountType = "restaurant";
+
+        if (accessToken != null) {
+            try {
+                String[] parts = accessToken.split("\\.");
+                if (parts.length >= 2) {
+                    String payloadBase64 = parts[1];
+                    byte[] decoded = android.util.Base64.decode(payloadBase64, android.util.Base64.URL_SAFE | android.util.Base64.NO_WRAP | android.util.Base64.NO_PADDING);
+                    String payloadJson = new String(decoded, java.nio.charset.StandardCharsets.UTF_8);
+                    JSONObject payloadObj = new JSONObject(payloadJson);
+                    accountType = payloadObj.optString("account_type", "restaurant");
+                }
+            } catch (Exception e) {
+                Log.e("VerifyFragment", "Failed to extract account_type", e);
+            }
+        }
         String payload = PresentationDefinitionProvider.getPresentationDefinition(accountType);
 
         new Thread(() -> {
             try {
                 URL url = new URL("https://glowing-gradually-midge.ngrok-free.app/ui/presentations");
+
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/json");
+                if (accessToken != null) {
+                    conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+                }
                 conn.setDoOutput(true);
 
                 OutputStream os = conn.getOutputStream();
@@ -102,8 +122,15 @@ public class VerifyFragment extends Fragment {
                 new Thread(() -> {
                     try {
                         URL url = new URL("https://glowing-gradually-midge.ngrok-free.app/ui/presentations/" + transactionId + "/status");
+                        SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
+                        String accessToken = prefs.getString("access_token", null);
+
                         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                         conn.setRequestMethod("GET");
+
+                        if (accessToken != null) {
+                            conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+                        }
 
                         int code = conn.getResponseCode();
                         if (code == HttpURLConnection.HTTP_OK) {

@@ -19,7 +19,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Welcome back!"
+        android:text="Welcome to CredCheck"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="?android:textColorPrimary"
@@ -28,38 +28,12 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Login to your account"
-        android:textColor="?android:textColorPrimary"
+        android:text="Use your verified Keycloak identity to log in and start verifying credentials."
+        android:textColor="?android:textColorSecondary"
+        android:textAlignment="center"
         android:textSize="14sp"
-        android:layout_marginBottom="24dp"/>
-
-    <EditText
-        android:id="@+id/usernameInput"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:hint="Username"
-        android:textColorHint="?android:textColorHint"
-        android:textColor="@color/black"
-        android:drawableStart="@drawable/ic_user"
-        android:drawablePadding="12dp"
-        android:paddingStart="12dp"
-        android:background="@drawable/input_background"
-        android:inputType="text"
-        android:layout_marginBottom="16dp"/>
-
-    <EditText
-        android:id="@+id/passwordInput"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:hint="Password"
-        android:textColor="@color/black"
-        android:textColorHint="?android:textColorHint"
-        android:drawableStart="@drawable/ic_lock"
-        android:drawablePadding="12dp"
-        android:paddingStart="12dp"
-        android:background="@drawable/input_background"
-        android:inputType="textPassword"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="32dp"
+        android:paddingHorizontal="16dp"/>
 
     <Button
         android:id="@+id/loginButton"

@@ -2,58 +2,50 @@ package com.example.credcheck.ui.auth;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.credcheck.ui.main.MainActivity;
 import com.example.credcheck.R;
-import com.example.credcheck.data.UserRepository;
+import com.example.credcheck.ui.main.MainActivity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+
+import net.openid.appauth.AuthorizationException;
+import net.openid.appauth.AuthorizationRequest;
+import net.openid.appauth.AuthorizationResponse;
+import net.openid.appauth.AuthorizationService;
+import net.openid.appauth.AuthorizationServiceConfiguration;
+import net.openid.appauth.ResponseTypeValues;
+import net.openid.appauth.TokenRequest;
+import net.openid.appauth.TokenResponse;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText usernameInput, passwordInput;
-    private Button loginButton;
+    private static final String AUTH_ENDPOINT =
+            "https://e9b5-109-166-132-30.ngrok-free.app/realms/verifier-realm/protocol/openid-connect/auth";
+    private static final String TOKEN_ENDPOINT =
+            "https://e9b5-109-166-132-30.ngrok-free.app/realms/verifier-realm/protocol/openid-connect/token";
+    private static final String CLIENT_ID = "verifier-mobile";
+    private static final String REDIRECT_URI = "com.example.credcheck://callback";
+    private static final int RC_AUTH = 1001;
     private TextView forgotPassword;
 
-    private UserRepository userRepo;
+    private AuthorizationService authService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        usernameInput = findViewById(R.id.usernameInput);
-        passwordInput = findViewById(R.id.passwordInput);
-        loginButton = findViewById(R.id.loginButton);
+        Button loginButton = findViewById(R.id.loginButton);
+        loginButton.setOnClickListener(v -> startKeycloakLogin());
         forgotPassword = findViewById(R.id.forgotPassword);
-
-        userRepo = new UserRepository(this);
-
-        loginButton.setOnClickListener(v -> {
-            String username = usernameInput.getText().toString();
-            String password = passwordInput.getText().toString();
-
-            //if (userRepo.validateLogin(username, password)) {
-            if (true == true) {
-                SharedPreferences prefs = getSharedPreferences("credcheck_prefs", MODE_PRIVATE);
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putString("logged_in_user", username);
-                editor.putString("account_type", userRepo.getAccountType(username));
-                editor.apply();
-
-                startActivity(new Intent(this, MainActivity.class));
-                finish();
-            } else {
-                Toast.makeText(this, "Invalid credentials", Toast.LENGTH_SHORT).show();
-            }
-        });
 
         forgotPassword.setOnClickListener(v -> {
             View dialogView = getLayoutInflater().inflate(R.layout.dialog_forgot_password, null);
@@ -65,6 +57,62 @@ public class LoginActivity extends AppCompatActivity {
 
             dialog.show();
         });
+    }
 
+    private void startKeycloakLogin() {
+        AuthorizationServiceConfiguration serviceConfig = new AuthorizationServiceConfiguration(
+                Uri.parse(AUTH_ENDPOINT),
+                Uri.parse(TOKEN_ENDPOINT)
+        );
+
+        AuthorizationRequest request = new AuthorizationRequest.Builder(
+                serviceConfig,
+                CLIENT_ID,
+                ResponseTypeValues.CODE,
+                Uri.parse(REDIRECT_URI)
+        )
+                .setScope("openid profile")
+                .build();
+
+        authService = new AuthorizationService(this);
+        Intent authIntent = authService.getAuthorizationRequestIntent(request);
+        startActivityForResult(authIntent, RC_AUTH);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_AUTH) {
+            AuthorizationResponse response = AuthorizationResponse.fromIntent(data);
+            AuthorizationException ex = AuthorizationException.fromIntent(data);
+
+            if (response != null) {
+                TokenRequest tokenRequest = response.createTokenExchangeRequest();
+
+                authService.performTokenRequest(tokenRequest, (tokenResponse, exception) -> {
+                    if (tokenResponse != null) {
+                        String accessToken = tokenResponse.accessToken;
+                        String idToken = tokenResponse.idToken;
+                        Log.d("ACCESS_TOKEN", accessToken);
+
+                        SharedPreferences prefs = getSharedPreferences("credcheck_prefs", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = prefs.edit();
+                        editor.putString("access_token", accessToken);
+                        editor.putString("id_token", idToken);
+                        editor.apply();
+
+                        startActivity(new Intent(this, MainActivity.class));
+                        finish();
+                    } else {
+                        Toast.makeText(this, "Token exchange failed", Toast.LENGTH_SHORT).show();
+                        Log.e("TOKEN_EXCHANGE", "Error", exception);
+                    }
+                });
+            } else {
+                Toast.makeText(this, "Authorization failed", Toast.LENGTH_SHORT).show();
+                Log.e("AUTH", "Authorization failed", ex);
+            }
+        }
     }
 }

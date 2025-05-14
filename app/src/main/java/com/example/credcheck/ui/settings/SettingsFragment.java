@@ -3,12 +3,16 @@ package com.example.credcheck.ui.settings;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.fragment.app.Fragment;
 
 import com.example.credcheck.R;
@@ -68,13 +72,28 @@ public class SettingsFragment extends Fragment implements OnMapReadyCallback {
         });
 
         logoutButton.setOnClickListener(v -> {
-            SharedPreferences prefs1 = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
-            prefs1.edit().clear().apply();
+            SharedPreferences sharedPrefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
+            String idToken = sharedPrefs.getString("id_token", null);
+            sharedPrefs.edit().clear().apply();
 
-            Intent intent = new Intent(requireContext(), LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
+            String logoutUrl = "https://e9b5-109-166-132-30.ngrok-free.app/realms/verifier-realm/protocol/openid-connect/logout";
+            if (idToken != null) {
+                logoutUrl += "?id_token_hint=" + idToken;
+            }
+
+            Log.d("URL", logoutUrl);
+
+            CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+            CustomTabsIntent customTabsIntent = builder.build();
+            customTabsIntent.launchUrl(requireContext(), Uri.parse(logoutUrl));
+
+            new Handler().postDelayed(() -> {
+                Intent intent = new Intent(requireContext(), LoginActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+            }, 2000);
         });
+
 
 
         SupportMapFragment mapFragment = (SupportMapFragment)
