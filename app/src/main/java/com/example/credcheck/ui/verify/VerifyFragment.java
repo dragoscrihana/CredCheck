@@ -1,7 +1,6 @@
 package com.example.credcheck.ui.verify;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,9 +10,10 @@ import android.widget.Button;
 import android.widget.ImageView;
 import androidx.fragment.app.Fragment;
 
-import com.example.credcheck.util.PresentationDefinitionProvider;
 import com.example.credcheck.R;
+import com.example.credcheck.util.AuthManager;
 import com.example.credcheck.ui.main.MainActivity;
+import com.example.credcheck.util.PresentationDefinitionProvider;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.qrcode.QRCodeWriter;
@@ -46,11 +46,13 @@ public class VerifyFragment extends Fragment {
     }
 
     private void generateQr() {
-        SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
-        String accessToken = prefs.getString("access_token", null);
-        String accountType = "restaurant";
+        AuthManager.getFreshAccessToken(requireContext(), (accessToken, authState) -> {
+            if (accessToken == null) {
+                Log.e("VerifyFragment", "Access token is null, cannot proceed.");
+                return;
+            }
 
-        if (accessToken != null) {
+            String accountType = "restaurant";
             try {
                 String[] parts = accessToken.split("\\.");
                 if (parts.length >= 2) {
@@ -63,54 +65,52 @@ public class VerifyFragment extends Fragment {
             } catch (Exception e) {
                 Log.e("VerifyFragment", "Failed to extract account_type", e);
             }
-        }
-        String payload = PresentationDefinitionProvider.getPresentationDefinition(accountType);
 
-        new Thread(() -> {
-            try {
-                URL url = new URL("https://glowing-gradually-midge.ngrok-free.app/ui/presentations");
+            String payload = PresentationDefinitionProvider.getPresentationDefinition(accountType);
 
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "application/json");
-                if (accessToken != null) {
+            new Thread(() -> {
+                try {
+                    URL url = new URL("https://glowing-gradually-midge.ngrok-free.app/ui/presentations");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "application/json");
                     conn.setRequestProperty("Authorization", "Bearer " + accessToken);
-                }
-                conn.setDoOutput(true);
+                    conn.setDoOutput(true);
 
-                OutputStream os = conn.getOutputStream();
-                os.write(payload.getBytes());
-                os.flush();
-                os.close();
+                    OutputStream os = conn.getOutputStream();
+                    os.write(payload.getBytes());
+                    os.flush();
+                    os.close();
 
-                int responseCode = conn.getResponseCode();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    InputStream is = conn.getInputStream();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                    StringBuilder result = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        result.append(line);
+                    int responseCode = conn.getResponseCode();
+                    if (responseCode == HttpURLConnection.HTTP_OK) {
+                        InputStream is = conn.getInputStream();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                        StringBuilder result = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            result.append(line);
+                        }
+
+                        JSONObject responseJson = new JSONObject(result.toString());
+                        String requestUri = responseJson.getString("requestUri");
+                        transactionId = responseJson.getString("transactionId");
+                        String requestId = requestUri.substring(requestUri.lastIndexOf("/") + 1);
+                        String encodedRequestUri = "https%3A%2F%2Fglowing-gradually-midge.ngrok-free.app%2Fwallet%2Frequest.jwt%2F" + requestId;
+                        String qrContent = "eudi-openid4vp://?client_id=Verifier&request_uri=" + encodedRequestUri;
+
+                        Bitmap qrBitmap = generateQrBitmap(qrContent);
+                        requireActivity().runOnUiThread(() -> qrImage.setImageBitmap(qrBitmap));
+
+                        startPollingTransactionStatus();
+                    } else {
+                        Log.e("VerifyFragment", "Server returned: " + responseCode);
                     }
-
-                    JSONObject responseJson = new JSONObject(result.toString());
-                    String requestUri = responseJson.getString("requestUri");
-                    transactionId = responseJson.getString("transactionId");
-                    String requestId = requestUri.substring(requestUri.lastIndexOf("/") + 1);
-                    String encodedRequestUri = "https%3A%2F%2Fglowing-gradually-midge.ngrok-free.app%2Fwallet%2Frequest.jwt%2F" + requestId;
-                    String qrContent = "eudi-openid4vp://?client_id=Verifier&request_uri=" + encodedRequestUri;
-
-                    Bitmap qrBitmap = generateQrBitmap(qrContent);
-                    requireActivity().runOnUiThread(() -> qrImage.setImageBitmap(qrBitmap));
-
-                    startPollingTransactionStatus();
-                } else {
-                    Log.e("VerifyFragment", "Server returned: " + responseCode);
+                } catch (Exception e) {
+                    Log.e("VerifyFragment", "QR generation failed", e);
                 }
-            } catch (Exception e) {
-                Log.e("VerifyFragment", "QR generation failed", e);
-            }
-        }).start();
+            }).start();
+        });
     }
 
     private void startPollingTransactionStatus() {
@@ -119,39 +119,41 @@ public class VerifyFragment extends Fragment {
             public void run() {
                 if (transactionId == null) return;
 
-                new Thread(() -> {
-                    try {
-                        URL url = new URL("https://glowing-gradually-midge.ngrok-free.app/ui/presentations/" + transactionId + "/status");
-                        SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
-                        String accessToken = prefs.getString("access_token", null);
+                AuthManager.getFreshAccessToken(requireContext(), (accessToken, authState) -> {
+                    if (accessToken == null) {
+                        Log.e("VerifyFragment", "Access token null during polling.");
+                        pollHandler.postDelayed(this, 2000);
+                        return;
+                    }
 
-                        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                        conn.setRequestMethod("GET");
-
-                        if (accessToken != null) {
+                    new Thread(() -> {
+                        try {
+                            URL url = new URL("https://glowing-gradually-midge.ngrok-free.app/ui/presentations/" + transactionId + "/status");
+                            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                            conn.setRequestMethod("GET");
                             conn.setRequestProperty("Authorization", "Bearer " + accessToken);
-                        }
 
-                        int code = conn.getResponseCode();
-                        if (code == HttpURLConnection.HTTP_OK) {
-                            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                            String status = reader.readLine();
+                            int code = conn.getResponseCode();
+                            if (code == HttpURLConnection.HTTP_OK) {
+                                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                                String status = reader.readLine();
 
-                            if ("PENDING".equalsIgnoreCase(status.trim())) {
-                                pollHandler.postDelayed(this, 2000);
+                                if ("PENDING".equalsIgnoreCase(status.trim())) {
+                                    pollHandler.postDelayed(this, 2000);
+                                } else {
+                                    Log.d("VerifyFragment", "Final status: " + status);
+                                    handleFinalStatus(status.trim());
+                                }
                             } else {
-                                Log.d("VerifyFragment", "Final status: " + status);
-                                handleFinalStatus(status.trim());
+                                Log.e("VerifyFragment", "Polling failed with HTTP " + code);
+                                pollHandler.postDelayed(this, 2000);
                             }
-                        } else {
-                            Log.e("VerifyFragment", "Polling failed with HTTP " + code);
+                        } catch (Exception e) {
+                            Log.e("VerifyFragment", "Polling error", e);
                             pollHandler.postDelayed(this, 2000);
                         }
-                    } catch (Exception e) {
-                        Log.e("VerifyFragment", "Polling error", e);
-                        pollHandler.postDelayed(this, 2000);
-                    }
-                }).start();
+                    }).start();
+                });
             }
         }, 2000);
     }
@@ -188,10 +190,8 @@ public class VerifyFragment extends Fragment {
     }
 
     private void saveTransactionStatus(String txId, String status) {
-        SharedPreferences prefs = requireContext().getSharedPreferences("history", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString(txId, status);
-        editor.apply();
+        var prefs = requireContext().getSharedPreferences("history", Context.MODE_PRIVATE);
+        prefs.edit().putString(txId, status).apply();
     }
 
     @Override

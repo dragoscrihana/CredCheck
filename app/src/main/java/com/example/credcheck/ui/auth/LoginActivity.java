@@ -17,6 +17,7 @@ import com.example.credcheck.R;
 import com.example.credcheck.ui.main.MainActivity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
+import net.openid.appauth.AuthState;
 import net.openid.appauth.AuthorizationException;
 import net.openid.appauth.AuthorizationRequest;
 import net.openid.appauth.AuthorizationResponse;
@@ -35,9 +36,9 @@ public class LoginActivity extends AppCompatActivity {
     private static final String CLIENT_ID = "verifier-mobile";
     private static final String REDIRECT_URI = "com.example.credcheck://callback";
     private static final int RC_AUTH = 1001;
-    private TextView forgotPassword;
 
     private AuthorizationService authService;
+    private TextView forgotPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,8 +47,8 @@ public class LoginActivity extends AppCompatActivity {
 
         Button loginButton = findViewById(R.id.loginButton);
         loginButton.setOnClickListener(v -> startKeycloakLogin());
-        forgotPassword = findViewById(R.id.forgotPassword);
 
+        forgotPassword = findViewById(R.id.forgotPassword);
         forgotPassword.setOnClickListener(v -> {
             View dialogView = getLayoutInflater().inflate(R.layout.dialog_forgot_password, null);
             BottomSheetDialog dialog = new BottomSheetDialog(LoginActivity.this);
@@ -93,16 +94,18 @@ public class LoginActivity extends AppCompatActivity {
 
                 authService.performTokenRequest(tokenRequest, (tokenResponse, exception) -> {
                     if (tokenResponse != null) {
-                        String accessToken = tokenResponse.accessToken;
-                        String idToken = tokenResponse.idToken;
-                        Log.d("ACCESS_TOKEN", accessToken);
+                        AuthorizationServiceConfiguration serviceConfig = new AuthorizationServiceConfiguration(
+                                Uri.parse(AUTH_ENDPOINT),
+                                Uri.parse(TOKEN_ENDPOINT)
+                        );
 
-                        SharedPreferences prefs = getSharedPreferences("credcheck_prefs", MODE_PRIVATE);
-                        SharedPreferences.Editor editor = prefs.edit();
-                        editor.putString("access_token", accessToken);
-                        editor.putString("id_token", idToken);
-                        editor.apply();
+                        AuthState authState = new AuthState(serviceConfig);
+                        authState.update(response, ex);
+                        authState.update(tokenResponse, null);
 
+                        persistAuthState(authState);
+
+                        Log.d("ACCESS_TOKEN", tokenResponse.accessToken);
                         startActivity(new Intent(this, MainActivity.class));
                         finish();
                     } else {
@@ -115,5 +118,10 @@ public class LoginActivity extends AppCompatActivity {
                 Log.e("AUTH", "Authorization failed", ex);
             }
         }
+    }
+
+    private void persistAuthState(AuthState authState) {
+        SharedPreferences prefs = getSharedPreferences("credcheck_prefs", MODE_PRIVATE);
+        prefs.edit().putString("auth_state", authState.jsonSerializeString()).apply();
     }
 }

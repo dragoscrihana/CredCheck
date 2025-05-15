@@ -35,7 +35,7 @@ public class PresentationDefinitionProvider {
                 "        \"constraints\": {\n" +
                 "          \"fields\": [\n" +
                 "            { \"path\": [\"$.vct\"], \"filter\": {\"type\": \"string\", \"const\": \"urn:eu.europa.ec.eudi:pid:1\"} },\n" +
-                "            { \"path\": [\"$.age_in_years\"], \"intent_to_retain\": false }\n" +
+                "            { \"path\": [\"$.birthdate\"], \"intent_to_retain\": false }\n" +
                 "          ]\n" +
                 "        }\n" +
                 "      }\n" +
@@ -64,8 +64,8 @@ public class PresentationDefinitionProvider {
                 "        },\n" +
                 "        \"constraints\": {\n" +
                 "          \"fields\": [\n" +
-                "            { \"path\": [\"$.vct\"], \"filter\": {\"type\": \"string\", \"const\": \"urn:eu.europa.ec.eudi:ehic:1\"} },\n" +
-                "            { \"path\": [\"$.subject\"], \"intent_to_retain\": false }\n" +
+                "            { \"path\": [\"$.vct\"], \"filter\": {\"type\": \"string\", \"const\": \"urn:org:certsign:university:graduation:1\"} },\n" +
+                "            { \"path\": [\"$.graduation_year\"], \"intent_to_retain\": false }\n" +
                 "          ]\n" +
                 "        }\n" +
                 "      }\n" +

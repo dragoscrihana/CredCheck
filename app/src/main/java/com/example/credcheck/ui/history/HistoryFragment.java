@@ -8,6 +8,7 @@ import android.widget.ListView;
 import androidx.fragment.app.Fragment;
 
 import com.example.credcheck.R;
+import com.example.credcheck.util.AuthManager;
 import com.example.credcheck.model.EventModel;
 import com.example.credcheck.model.TransactionModel;
 import com.github.mikephil.charting.charts.PieChart;
@@ -49,35 +50,35 @@ public class HistoryFragment extends Fragment {
     }
 
     private void fetchTransactions(View root) {
-        new Thread(() -> {
-            try {
-                URL url = new URL(API_URL);
-                SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
-                String accessToken = prefs.getString("access_token", null);
-
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-
-                if (accessToken != null) {
-                    conn.setRequestProperty("Authorization", "Bearer " + accessToken);
-                }
-
-                int code = conn.getResponseCode();
-                if (code == HttpURLConnection.HTTP_OK) {
-                    InputStream is = conn.getInputStream();
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-
-                    parseTransactions(response.toString(), root);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+        AuthManager.getFreshAccessToken(requireContext(), (accessToken, authState) -> {
+            if (accessToken == null) {
+                // handle token refresh failure (optional: redirect to login)
+                return;
             }
-        }).start();
+
+            new Thread(() -> {
+                try {
+                    URL url = new URL(API_URL);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+
+                    int code = conn.getResponseCode();
+                    if (code == HttpURLConnection.HTTP_OK) {
+                        InputStream is = conn.getInputStream();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+                        StringBuilder response = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            response.append(line);
+                        }
+                        parseTransactions(response.toString(), root);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+        });
     }
 
     private void parseTransactions(String json, View root) {
@@ -119,7 +120,6 @@ public class HistoryFragment extends Fragment {
                 }
 
                 String date = timeFormat.format(new Date(lastUpdated));
-
                 newList.add(new TransactionModel(transactionId, date, events, status));
             }
 

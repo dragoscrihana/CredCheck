@@ -7,9 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.view.*;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.browser.customtabs.CustomTabsIntent;
@@ -20,6 +18,8 @@ import com.example.credcheck.R;
 import com.example.credcheck.ui.auth.LoginActivity;
 import com.google.android.gms.maps.*;
 import com.google.android.gms.maps.model.*;
+
+import net.openid.appauth.AuthState;
 
 public class SettingsFragment extends Fragment implements OnMapReadyCallback {
 
@@ -32,20 +32,20 @@ public class SettingsFragment extends Fragment implements OnMapReadyCallback {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View root = inflater.inflate(com.example.credcheck.R.layout.fragment_settings, container, false);
+        View root = inflater.inflate(R.layout.fragment_settings, container, false);
 
-        themeSpinner = root.findViewById(com.example.credcheck.R.id.themeSpinner);
-        versionText = root.findViewById(com.example.credcheck.R.id.versionText);
-        logoutButton = root.findViewById(com.example.credcheck.R.id.logoutButton);
+        themeSpinner = root.findViewById(R.id.themeSpinner);
+        versionText = root.findViewById(R.id.versionText);
+        logoutButton = root.findViewById(R.id.logoutButton);
 
         versionText.setText("1.0.0");
 
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 requireContext(),
-                com.example.credcheck.R.array.theme_options,
-                com.example.credcheck.R.layout.spinner_item
+                R.array.theme_options,
+                R.layout.spinner_item
         );
-        adapter.setDropDownViewResource(com.example.credcheck.R.layout.spinner_dropdown_item);
+        adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         themeSpinner.setAdapter(adapter);
 
         SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
@@ -73,21 +73,33 @@ public class SettingsFragment extends Fragment implements OnMapReadyCallback {
         });
 
         logoutButton.setOnClickListener(v -> {
-            SharedPreferences sharedPrefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
-            String idToken = sharedPrefs.getString("id_token", null);
-            sharedPrefs.edit().clear().apply();
+            SharedPreferences shared_prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
+            String authStateJson = shared_prefs.getString("auth_state", null);
+            String idToken = null;
+
+            if (authStateJson != null) {
+                try {
+                    AuthState authState = AuthState.jsonDeserialize(authStateJson);
+                    idToken = authState.getIdToken();
+                } catch (Exception e) {
+                    Log.e("SettingsFragment", "Failed to load AuthState", e);
+                }
+            }
+
+            prefs.edit().clear().apply();
 
             String logoutUrl = BuildConfig.BASE_URL + "/realms/verifier-realm/protocol/openid-connect/logout";
             if (idToken != null) {
                 logoutUrl += "?id_token_hint=" + idToken;
             }
 
-            Log.d("URL", logoutUrl);
+            Log.d("Logout URL", logoutUrl);
 
             CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
             CustomTabsIntent customTabsIntent = builder.build();
             customTabsIntent.launchUrl(requireContext(), Uri.parse(logoutUrl));
 
+            // Return to LoginActivity
             new Handler().postDelayed(() -> {
                 Intent intent = new Intent(requireContext(), LoginActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -95,10 +107,8 @@ public class SettingsFragment extends Fragment implements OnMapReadyCallback {
             }, 2000);
         });
 
-
-
         SupportMapFragment mapFragment = (SupportMapFragment)
-                getChildFragmentManager().findFragmentById(com.example.credcheck.R.id.map_container);
+                getChildFragmentManager().findFragmentById(R.id.map_container);
 
         if (mapFragment == null) {
             mapFragment = SupportMapFragment.newInstance();
@@ -155,6 +165,4 @@ public class SettingsFragment extends Fragment implements OnMapReadyCallback {
         editor.apply();
         Toast.makeText(getContext(), "Location updated", Toast.LENGTH_SHORT).show();
     }
-
-
 }
