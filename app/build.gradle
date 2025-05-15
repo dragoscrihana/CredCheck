@@ -22,7 +22,7 @@ android {
                 appAuthRedirectScheme: "com.example.credcheck"
         ]
 
-        buildConfigField "String", "BASE_URL", "\"https://4c03-82-78-167-50.ngrok-free.app\""
+        buildConfigField "String", "BASE_URL", "\"https://7ed9-82-78-167-50.ngrok-free.app\""
     }
 
     buildTypes {

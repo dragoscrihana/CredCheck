@@ -18,11 +18,13 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.qrcode.QRCodeWriter;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.UUID;
 
 public class VerifyFragment extends Fragment {
 
@@ -66,11 +68,25 @@ public class VerifyFragment extends Fragment {
                 Log.e("VerifyFragment", "Failed to extract account_type", e);
             }
 
-            String payload = PresentationDefinitionProvider.getPresentationDefinition(accountType);
+            String nonce = UUID.randomUUID().toString();
+
+            String payload = null;
+            try {
+                payload = new JSONObject()
+                        .put("type", "vp_token")
+                        .put("nonce", nonce)
+                        .put("request_uri_method", "get")
+                        .toString();
+            } catch (JSONException e) {
+                throw new RuntimeException(e);
+            }
+
+            String finalAccountType = accountType;
+            String finalPayload = payload;
 
             new Thread(() -> {
                 try {
-                    URL url = new URL("https://glowing-gradually-midge.ngrok-free.app/ui/presentations");
+                    URL url = new URL("https://glowing-gradually-midge.ngrok-free.app/ui/presentations/" + finalAccountType);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("POST");
                     conn.setRequestProperty("Content-Type", "application/json");
@@ -78,7 +94,7 @@ public class VerifyFragment extends Fragment {
                     conn.setDoOutput(true);
 
                     OutputStream os = conn.getOutputStream();
-                    os.write(payload.getBytes());
+                    os.write(finalPayload.getBytes());
                     os.flush();
                     os.close();
 
