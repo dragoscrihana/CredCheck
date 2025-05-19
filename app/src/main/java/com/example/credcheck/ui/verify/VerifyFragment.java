@@ -1,13 +1,19 @@
 package com.example.credcheck.ui.verify;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.*;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+
 import androidx.fragment.app.Fragment;
 
 import com.example.credcheck.R;
@@ -30,6 +36,8 @@ public class VerifyFragment extends Fragment {
 
     private ImageView qrImage;
     private Button generateQrButton;
+    TextView attributeLabel;
+    private RadioGroup attributeRadioGroup;
 
     private final Handler pollHandler = new Handler();
     private String transactionId = null;
@@ -41,7 +49,11 @@ public class VerifyFragment extends Fragment {
         qrImage = root.findViewById(R.id.qrImage);
         generateQrButton = root.findViewById(R.id.generateQrButton);
 
-        generateQr();
+        attributeLabel = root.findViewById(R.id.attributeLabel);
+
+        attributeRadioGroup = root.findViewById(R.id.attributeRadioGroup);
+        setupAttributeRadioButtons();
+
         generateQrButton.setOnClickListener(v -> generateQr());
 
         return root;
@@ -81,12 +93,22 @@ public class VerifyFragment extends Fragment {
                 throw new RuntimeException(e);
             }
 
-            String finalAccountType = accountType;
             String finalPayload = payload;
+
+            int selectedId = attributeRadioGroup.getCheckedRadioButtonId();
+            String selectedAttribute = "birthdate";
+
+            if (selectedId != -1) {
+                RadioButton selectedRadio = attributeRadioGroup.findViewById(selectedId);
+                selectedAttribute = selectedRadio.getText().toString();
+            }
+
+            String finalAttribute = selectedAttribute;
 
             new Thread(() -> {
                 try {
-                    URL url = new URL("https://glowing-gradually-midge.ngrok-free.app/ui/presentations/" + finalAccountType);
+
+                    URL url = new URL("https://free-barnacle-exciting.ngrok-free.app/ui/presentations/" + finalAttribute);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("POST");
                     conn.setRequestProperty("Content-Type", "application/json");
@@ -112,7 +134,7 @@ public class VerifyFragment extends Fragment {
                         String requestUri = responseJson.getString("requestUri");
                         transactionId = responseJson.getString("transactionId");
                         String requestId = requestUri.substring(requestUri.lastIndexOf("/") + 1);
-                        String encodedRequestUri = "https%3A%2F%2Fglowing-gradually-midge.ngrok-free.app%2Fwallet%2Frequest.jwt%2F" + requestId;
+                        String encodedRequestUri = "https%3A%2F%2Ffree-barnacle-exciting.ngrok-free.app%2Fwallet%2Frequest.jwt%2F" + requestId;
                         String qrContent = "eudi-openid4vp://?client_id=Verifier&request_uri=" + encodedRequestUri;
 
                         Bitmap qrBitmap = generateQrBitmap(qrContent);
@@ -144,7 +166,7 @@ public class VerifyFragment extends Fragment {
 
                     new Thread(() -> {
                         try {
-                            URL url = new URL("https://glowing-gradually-midge.ngrok-free.app/ui/presentations/" + transactionId + "/status");
+                            URL url = new URL("https://free-barnacle-exciting.ngrok-free.app/ui/presentations/" + transactionId + "/status");
                             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                             conn.setRequestMethod("GET");
                             conn.setRequestProperty("Authorization", "Bearer " + accessToken);
@@ -173,6 +195,82 @@ public class VerifyFragment extends Fragment {
             }
         }, 2000);
     }
+
+    private void setupAttributeRadioButtons() {
+        AuthManager.getFreshAccessToken(requireContext(), (accessToken, authState) -> {
+            if (accessToken == null) return;
+
+            String accountType = "restaurant";
+            try {
+                String[] parts = accessToken.split("\\.");
+                if (parts.length >= 2) {
+                    String payloadBase64 = parts[1];
+                    byte[] decoded = android.util.Base64.decode(payloadBase64, android.util.Base64.URL_SAFE | android.util.Base64.NO_WRAP | android.util.Base64.NO_PADDING);
+                    String payloadJson = new String(decoded, java.nio.charset.StandardCharsets.UTF_8);
+                    JSONObject payloadObj = new JSONObject(payloadJson);
+                    accountType = payloadObj.optString("account_type", "restaurant");
+                }
+            } catch (Exception e) {
+                Log.e("VerifyFragment", "Failed to extract account_type", e);
+            }
+
+            if (!"restaurant".equalsIgnoreCase(accountType)) {
+                requireActivity().runOnUiThread(() -> attributeRadioGroup.setVisibility(View.GONE));
+                return;
+            }
+
+            String finalAccountTyoe = accountType;
+
+            new Thread(() -> {
+                try {
+                    URL url = new URL("https://free-barnacle-exciting.ngrok-free.app/ui/feature-options/" + finalAccountTyoe);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("GET");
+                    conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+
+                    if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                        StringBuilder result = new StringBuilder();
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            result.append(line);
+                        }
+
+                        org.json.JSONArray attributes = new org.json.JSONArray(result.toString());
+
+                        requireActivity().runOnUiThread(() -> {
+                            attributeRadioGroup.removeAllViews();
+                            attributeLabel.setVisibility(View.VISIBLE);
+                            attributeRadioGroup.setVisibility(View.VISIBLE);
+                            for (int i = 0; i < attributes.length(); i++) {
+                                try {
+                                    String attr = attributes.getString(i);
+                                    RadioButton rb = new RadioButton(requireContext());
+                                    rb.setButtonTintList(ColorStateList.valueOf(Color.parseColor("#888888")));
+                                    rb.setText(attr);
+                                    rb.setId(View.generateViewId());
+
+                                    if (i == 0) {
+                                        rb.setChecked(true);
+                                    }
+
+                                    rb.setOnClickListener(v -> generateQr());
+                                    attributeRadioGroup.addView(rb);
+                                } catch (JSONException e) {
+                                    Log.e("VerifyFragment", "Error parsing attribute", e);
+                                }
+                            }
+                            attributeRadioGroup.setVisibility(View.VISIBLE);
+                            generateQr();
+                        });
+                    }
+                } catch (Exception e) {
+                    Log.e("VerifyFragment", "Failed to fetch attributes", e);
+                }
+            }).start();
+        });
+    }
+
 
     private void handleFinalStatus(String status) {
         requireActivity().runOnUiThread(() -> {

@@ -34,7 +34,7 @@ public class HistoryFragment extends Fragment {
     private TransactionAdapter adapter;
     private final List<TransactionModel> transactions = new ArrayList<>();
 
-    private static final String API_URL = "https://glowing-gradually-midge.ngrok-free.app/ui/presentations/recent";
+    private static final String API_URL = "https://free-barnacle-exciting.ngrok-free.app/ui/presentations/recent";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

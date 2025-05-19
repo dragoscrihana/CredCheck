@@ -1,6 +1,7 @@
 package com.example.credcheck.ui.main;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -49,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout overlayContainer = findViewById(R.id.globalOverlayContainer);
         LottieAnimationView animationView = findViewById(R.id.globalAnimationView);
         TextView statusText = findViewById(R.id.globalStatusText);
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
 
         dimOverlay.setVisibility(View.VISIBLE);
         overlayContainer.setVisibility(View.VISIBLE);
@@ -61,12 +63,66 @@ public class MainActivity extends AppCompatActivity {
             statusText.setText("Denied");
         }
 
+        animationView.setScaleX(1f);
+        animationView.setScaleY(1f);
+        animationView.setAlpha(1f);
+        animationView.setTranslationX(0f);
+        animationView.setTranslationY(0f);
+        statusText.setAlpha(1f);
+
         animationView.playAnimation();
+
+        new Handler().postDelayed(() -> {
+            View historyItem = bottomNav.findViewById(R.id.bottom_navigation);
+            if (historyItem != null) {
+                int[] fromLoc = new int[2];
+                int[] toLoc = new int[2];
+
+                animationView.getLocationOnScreen(fromLoc);
+                historyItem.getLocationOnScreen(toLoc);
+
+                float fromCenterX = fromLoc[0] + animationView.getWidth() / 2f;
+                float fromCenterY = fromLoc[1] + animationView.getHeight() / 2f;
+                float toCenterX = toLoc[0] + historyItem.getWidth() / 2f;
+                float toCenterY = toLoc[1] + historyItem.getHeight() / 2f;
+
+                float deltaX = toCenterX - fromCenterX;
+                float deltaY = toCenterY - fromCenterY;
+
+                statusText.animate()
+                        .alpha(0f)
+                        .setDuration(300)
+                        .start();
+
+                animationView.animate()
+                        .scaleX(0.2f)
+                        .scaleY(0.2f)
+                        .translationX(deltaX)
+                        .translationY(deltaY)
+                        .alpha(0f)
+                        .setDuration(800)
+                        .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                        .withEndAction(() -> {
+                            dimOverlay.setVisibility(View.GONE);
+                            overlayContainer.setVisibility(View.GONE);
+                            animationView.setScaleX(1f);
+                            animationView.setScaleY(1f);
+                            animationView.setTranslationX(0f);
+                            animationView.setTranslationY(0f);
+                            animationView.setAlpha(1f);
+                            statusText.setAlpha(1f);
+                        })
+                        .start();
+            }
+        }, 2000);
 
         overlayContainer.setOnClickListener(v -> {
             dimOverlay.setVisibility(View.GONE);
             overlayContainer.setVisibility(View.GONE);
         });
     }
+
+
+
 
 }

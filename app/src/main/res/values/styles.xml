@@ -2,4 +2,8 @@
     <style name="CustomSpinnerStyle">
         <item name="android:popupBackground">@drawable/spinner_dropdown_background</item>
     </style>
+
+    <style name="RadioButtonBlue" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorControlActivated">#007BFF</item> <!-- same blue as Regenerate -->
+    </style>
 </resources>
