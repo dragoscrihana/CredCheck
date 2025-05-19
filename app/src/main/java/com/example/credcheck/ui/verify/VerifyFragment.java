@@ -108,7 +108,7 @@ public class VerifyFragment extends Fragment {
             new Thread(() -> {
                 try {
 
-                    URL url = new URL("https://free-barnacle-exciting.ngrok-free.app/ui/presentations/" + finalAttribute);
+                    URL url = new URL("https://backend.credcheck.site/ui/presentations/" + finalAttribute);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("POST");
                     conn.setRequestProperty("Content-Type", "application/json");
@@ -134,7 +134,7 @@ public class VerifyFragment extends Fragment {
                         String requestUri = responseJson.getString("requestUri");
                         transactionId = responseJson.getString("transactionId");
                         String requestId = requestUri.substring(requestUri.lastIndexOf("/") + 1);
-                        String encodedRequestUri = "https%3A%2F%2Ffree-barnacle-exciting.ngrok-free.app%2Fwallet%2Frequest.jwt%2F" + requestId;
+                        String encodedRequestUri = "https%3A%2F%2Fbackend.credcheck.site%2Fwallet%2Frequest.jwt%2F" + requestId;
                         String qrContent = "eudi-openid4vp://?client_id=Verifier&request_uri=" + encodedRequestUri;
 
                         Bitmap qrBitmap = generateQrBitmap(qrContent);
@@ -166,7 +166,7 @@ public class VerifyFragment extends Fragment {
 
                     new Thread(() -> {
                         try {
-                            URL url = new URL("https://free-barnacle-exciting.ngrok-free.app/ui/presentations/" + transactionId + "/status");
+                            URL url = new URL("https://backend.credcheck.site/ui/presentations/" + transactionId + "/status");
                             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                             conn.setRequestMethod("GET");
                             conn.setRequestProperty("Authorization", "Bearer " + accessToken);
@@ -223,7 +223,7 @@ public class VerifyFragment extends Fragment {
 
             new Thread(() -> {
                 try {
-                    URL url = new URL("https://free-barnacle-exciting.ngrok-free.app/ui/feature-options/" + finalAccountTyoe);
+                    URL url = new URL("https://backend.credcheck.site/ui/feature-options/" + finalAccountTyoe);
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setRequestMethod("GET");
                     conn.setRequestProperty("Authorization", "Bearer " + accessToken);
