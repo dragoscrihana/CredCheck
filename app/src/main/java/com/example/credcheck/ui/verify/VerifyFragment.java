@@ -214,11 +214,6 @@ public class VerifyFragment extends Fragment {
                 Log.e("VerifyFragment", "Failed to extract account_type", e);
             }
 
-            if (!"restaurant".equalsIgnoreCase(accountType)) {
-                requireActivity().runOnUiThread(() -> attributeRadioGroup.setVisibility(View.GONE));
-                return;
-            }
-
             String finalAccountTyoe = accountType;
 
             new Thread(() -> {
@@ -240,8 +235,7 @@ public class VerifyFragment extends Fragment {
 
                         requireActivity().runOnUiThread(() -> {
                             attributeRadioGroup.removeAllViews();
-                            attributeLabel.setVisibility(View.VISIBLE);
-                            attributeRadioGroup.setVisibility(View.VISIBLE);
+
                             for (int i = 0; i < attributes.length(); i++) {
                                 try {
                                     String attr = attributes.getString(i);
@@ -260,7 +254,11 @@ public class VerifyFragment extends Fragment {
                                     Log.e("VerifyFragment", "Error parsing attribute", e);
                                 }
                             }
-                            attributeRadioGroup.setVisibility(View.VISIBLE);
+
+                            if (attributes.length() > 1) {
+                                attributeLabel.setVisibility(View.VISIBLE);
+                                attributeRadioGroup.setVisibility(View.VISIBLE);
+                            }
                             generateQr();
                         });
                     }
