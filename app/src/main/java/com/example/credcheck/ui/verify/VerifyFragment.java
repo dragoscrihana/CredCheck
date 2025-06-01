@@ -19,7 +19,6 @@ import androidx.fragment.app.Fragment;
 import com.example.credcheck.R;
 import com.example.credcheck.util.AuthManager;
 import com.example.credcheck.ui.main.MainActivity;
-import com.example.credcheck.util.PresentationDefinitionProvider;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.qrcode.QRCodeWriter;
