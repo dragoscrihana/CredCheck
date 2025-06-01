@@ -19,6 +19,7 @@ import androidx.core.content.ContextCompat;
 import com.example.credcheck.BuildConfig;
 import com.example.credcheck.R;
 import com.example.credcheck.ui.main.MainActivity;
+import com.example.credcheck.util.AuthManager;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import net.openid.appauth.AuthState;
@@ -112,31 +113,25 @@ public class LoginActivity extends AppCompatActivity {
 
         promptInfo = new BiometricPrompt.PromptInfo.Builder()
                 .setTitle("Quick Login")
-                .setSubtitle("Authenticate using biometrics")
-                .setNegativeButtonText("Use password")
+                .setSubtitle("Authenticate using biometrics or device credentials")
+                .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_WEAK
+                        | BiometricManager.Authenticators.DEVICE_CREDENTIAL)
                 .build();
     }
 
     private void tryAuthWithStoredTokens() {
-        SharedPreferences prefs = getSharedPreferences("credcheck_prefs", MODE_PRIVATE);
-        String json = prefs.getString("auth_state", null);
-        if (json != null) {
-            try {
-                AuthState authState = AuthState.jsonDeserialize(json);
-                AuthorizationService authService = new AuthorizationService(this);
+        AuthState authState = AuthManager.loadAuthState(this);
+        if (authState != null && authState.getAccessToken() != null) {
+            AuthorizationService authService = new AuthorizationService(this);
 
-                authState.performActionWithFreshTokens(authService, (accessToken, idToken, ex) -> {
-                    if (accessToken != null) {
-                        startActivity(new Intent(this, MainActivity.class));
-                        finish();
-                    } else {
-                        startKeycloakLogin();
-                    }
-                });
-            } catch (Exception e) {
-                e.printStackTrace();
-                startKeycloakLogin();
-            }
+            authState.performActionWithFreshTokens(authService, (accessToken, idToken, ex) -> {
+                if (accessToken != null) {
+                    startActivity(new Intent(this, MainActivity.class));
+                    finish();
+                } else {
+                    startKeycloakLogin();
+                }
+            });
         } else {
             startKeycloakLogin();
         }
@@ -154,7 +149,7 @@ public class LoginActivity extends AppCompatActivity {
                 ResponseTypeValues.CODE,
                 Uri.parse(REDIRECT_URI)
         )
-                .setScope("openid profile")
+                .setScope("openid profile offline_access")
                 .build();
 
         authService = new AuthorizationService(this);
@@ -184,7 +179,7 @@ public class LoginActivity extends AppCompatActivity {
                         authState.update(response, ex);
                         authState.update(tokenResponse, null);
 
-                        persistAuthState(authState);
+                        AuthManager.persistAuthState(this, authState);
 
                         Log.d("ACCESS_TOKEN", tokenResponse.accessToken);
                         startActivity(new Intent(this, MainActivity.class));
@@ -199,10 +194,5 @@ public class LoginActivity extends AppCompatActivity {
                 Log.e("AUTH", "Authorization failed", ex);
             }
         }
-    }
-
-    private void persistAuthState(AuthState authState) {
-        SharedPreferences prefs = getSharedPreferences("credcheck_prefs", MODE_PRIVATE);
-        prefs.edit().putString("auth_state", authState.jsonSerializeString()).apply();
     }
 }

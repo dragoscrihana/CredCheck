@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment;
 import com.example.credcheck.BuildConfig;
 import com.example.credcheck.R;
 import com.example.credcheck.ui.auth.LoginActivity;
+import com.example.credcheck.util.AuthManager;
 
 import net.openid.appauth.AuthState;
 
@@ -84,8 +85,9 @@ public class SettingsFragment extends Fragment {
         });
 
         logoutButton.setOnClickListener(v -> {
-            SharedPreferences shared_prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
-            String authStateJson = shared_prefs.getString("auth_state", null);
+            String authStateJson = AuthManager
+                    .loadAuthState(requireContext())
+                    .jsonSerializeString();
             String idToken = null;
 
             if (authStateJson != null) {
@@ -97,7 +99,7 @@ public class SettingsFragment extends Fragment {
                 }
             }
 
-            prefs.edit().clear().apply();
+            AuthManager.clearAuthState(requireContext());
 
             String logoutUrl = BuildConfig.BASE_URL + "/realms/verifier-realm/protocol/openid-connect/logout";
             if (idToken != null) {
