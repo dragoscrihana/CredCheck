@@ -25,14 +25,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
-        int screenWidth = metrics.widthPixels;
-        int screenHeight = metrics.heightPixels;
-
-        Log.d("ScreenSize", "Width: " + screenWidth + "px, Height: " + screenHeight + "px");
-
         BottomNavigationView navView = findViewById(R.id.bottom_navigation);
 
         navView.setOnItemSelectedListener(item -> {

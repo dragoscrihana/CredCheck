@@ -16,19 +16,16 @@ import androidx.fragment.app.Fragment;
 import com.example.credcheck.BuildConfig;
 import com.example.credcheck.R;
 import com.example.credcheck.ui.auth.LoginActivity;
-import com.google.android.gms.maps.*;
-import com.google.android.gms.maps.model.*;
 
 import net.openid.appauth.AuthState;
 
-public class SettingsFragment extends Fragment implements OnMapReadyCallback {
+public class SettingsFragment extends Fragment {
 
     private Spinner themeSpinner;
     private TextView versionText;
     private Button logoutButton;
-    private GoogleMap map;
-    private Marker locationMarker;
-    private static final LatLng DEFAULT_LOCATION = new LatLng(44.4268, 26.1025); // Bucharest
+    private Switch biometricSwitch;
+    private TextView biometricStatusText;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -37,6 +34,8 @@ public class SettingsFragment extends Fragment implements OnMapReadyCallback {
         themeSpinner = root.findViewById(R.id.themeSpinner);
         versionText = root.findViewById(R.id.versionText);
         logoutButton = root.findViewById(R.id.logoutButton);
+        biometricSwitch = root.findViewById(R.id.biometricSwitch);
+        biometricStatusText = root.findViewById(R.id.biometricStatusText); // 🆕
 
         versionText.setText("1.0.0");
 
@@ -72,6 +71,18 @@ public class SettingsFragment extends Fragment implements OnMapReadyCallback {
             public void onNothingSelected(AdapterView<?> parent) {}
         });
 
+        boolean biometricEnabled = prefs.getBoolean("biometric_enabled", false);
+        biometricSwitch.setChecked(biometricEnabled);
+        biometricStatusText.setText(biometricEnabled ? "On" : "Off");
+
+        biometricSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            prefs.edit().putBoolean("biometric_enabled", isChecked).apply();
+            biometricStatusText.setText(isChecked ? "On" : "Off");
+            Toast.makeText(requireContext(),
+                    isChecked ? "Biometric login enabled" : "Biometric login disabled",
+                    Toast.LENGTH_SHORT).show();
+        });
+
         logoutButton.setOnClickListener(v -> {
             SharedPreferences shared_prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
             String authStateJson = shared_prefs.getString("auth_state", null);
@@ -99,7 +110,6 @@ public class SettingsFragment extends Fragment implements OnMapReadyCallback {
             CustomTabsIntent customTabsIntent = builder.build();
             customTabsIntent.launchUrl(requireContext(), Uri.parse(logoutUrl));
 
-            // Return to LoginActivity
             new Handler().postDelayed(() -> {
                 Intent intent = new Intent(requireContext(), LoginActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -107,62 +117,6 @@ public class SettingsFragment extends Fragment implements OnMapReadyCallback {
             }, 2000);
         });
 
-        SupportMapFragment mapFragment = (SupportMapFragment)
-                getChildFragmentManager().findFragmentById(R.id.map_container);
-
-        if (mapFragment == null) {
-            mapFragment = SupportMapFragment.newInstance();
-            getChildFragmentManager().beginTransaction()
-                    .replace(R.id.map_container, mapFragment)
-                    .commit();
-        }
-
-        mapFragment.getMapAsync(this);
-
         return root;
-    }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        this.map = googleMap;
-
-        SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
-        double lat = Double.longBitsToDouble(prefs.getLong("location_lat", Double.doubleToLongBits(DEFAULT_LOCATION.latitude)));
-        double lng = Double.longBitsToDouble(prefs.getLong("location_lng", Double.doubleToLongBits(DEFAULT_LOCATION.longitude)));
-        LatLng storedLocation = new LatLng(lat, lng);
-
-        locationMarker = map.addMarker(new MarkerOptions()
-                .position(storedLocation)
-                .title("Verifier Location")
-                .draggable(true));
-
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(storedLocation, 15f));
-
-        map.setOnMarkerDragListener(new GoogleMap.OnMarkerDragListener() {
-            @Override public void onMarkerDragStart(Marker marker) {}
-            @Override public void onMarkerDrag(Marker marker) {}
-            @Override
-            public void onMarkerDragEnd(Marker marker) {
-                saveLocation(marker.getPosition());
-            }
-        });
-
-        map.setOnMapClickListener(latLng -> {
-            if (locationMarker != null) locationMarker.remove();
-            locationMarker = map.addMarker(new MarkerOptions()
-                    .position(latLng)
-                    .title("Verifier Location")
-                    .draggable(true));
-            saveLocation(latLng);
-        });
-    }
-
-    private void saveLocation(LatLng latLng) {
-        SharedPreferences prefs = requireContext().getSharedPreferences("credcheck_prefs", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putLong("location_lat", Double.doubleToLongBits(latLng.latitude));
-        editor.putLong("location_lng", Double.doubleToLongBits(latLng.longitude));
-        editor.apply();
-        Toast.makeText(getContext(), "Location updated", Toast.LENGTH_SHORT).show();
     }
 }

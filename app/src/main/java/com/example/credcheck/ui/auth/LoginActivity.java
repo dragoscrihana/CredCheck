@@ -10,7 +10,11 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.biometric.BiometricManager;
+import androidx.biometric.BiometricPrompt;
+import androidx.core.content.ContextCompat;
 
 import com.example.credcheck.BuildConfig;
 import com.example.credcheck.R;
@@ -27,6 +31,8 @@ import net.openid.appauth.ResponseTypeValues;
 import net.openid.appauth.TokenRequest;
 import net.openid.appauth.TokenResponse;
 
+import java.util.concurrent.Executor;
+
 public class LoginActivity extends AppCompatActivity {
 
     private static final String AUTH_ENDPOINT =
@@ -40,13 +46,27 @@ public class LoginActivity extends AppCompatActivity {
     private AuthorizationService authService;
     private TextView forgotPassword;
 
+    private BiometricPrompt biometricPrompt;
+    private BiometricPrompt.PromptInfo promptInfo;
+    private Executor executor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
         Button loginButton = findViewById(R.id.loginButton);
-        loginButton.setOnClickListener(v -> startKeycloakLogin());
+        loginButton.setOnClickListener(v -> {
+            SharedPreferences prefs = getSharedPreferences("credcheck_prefs", MODE_PRIVATE);
+            boolean biometricEnabled = prefs.getBoolean("biometric_enabled", false);
+
+            if (biometricEnabled && isBiometricAvailable()) {
+                setupBiometricPrompt();
+                biometricPrompt.authenticate(promptInfo);
+            } else {
+                startKeycloakLogin();
+            }
+        });
 
         forgotPassword = findViewById(R.id.forgotPassword);
         forgotPassword.setOnClickListener(v -> {
@@ -59,6 +79,67 @@ public class LoginActivity extends AppCompatActivity {
 
             dialog.show();
         });
+    }
+
+    private boolean isBiometricAvailable() {
+        BiometricManager manager = BiometricManager.from(this);
+        return manager.canAuthenticate(
+                BiometricManager.Authenticators.BIOMETRIC_WEAK | BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        ) == BiometricManager.BIOMETRIC_SUCCESS;
+    }
+
+    private void setupBiometricPrompt() {
+        executor = ContextCompat.getMainExecutor(this);
+        biometricPrompt = new BiometricPrompt(this, executor, new BiometricPrompt.AuthenticationCallback() {
+            @Override
+            public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
+                super.onAuthenticationSucceeded(result);
+                tryAuthWithStoredTokens();
+            }
+
+            @Override
+            public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
+                super.onAuthenticationError(errorCode, errString);
+                startKeycloakLogin();
+            }
+
+            @Override
+            public void onAuthenticationFailed() {
+                super.onAuthenticationFailed();
+                startKeycloakLogin();
+            }
+        });
+
+        promptInfo = new BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Quick Login")
+                .setSubtitle("Authenticate using biometrics")
+                .setNegativeButtonText("Use password")
+                .build();
+    }
+
+    private void tryAuthWithStoredTokens() {
+        SharedPreferences prefs = getSharedPreferences("credcheck_prefs", MODE_PRIVATE);
+        String json = prefs.getString("auth_state", null);
+        if (json != null) {
+            try {
+                AuthState authState = AuthState.jsonDeserialize(json);
+                AuthorizationService authService = new AuthorizationService(this);
+
+                authState.performActionWithFreshTokens(authService, (accessToken, idToken, ex) -> {
+                    if (accessToken != null) {
+                        startActivity(new Intent(this, MainActivity.class));
+                        finish();
+                    } else {
+                        startKeycloakLogin();
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                startKeycloakLogin();
+            }
+        } else {
+            startKeycloakLogin();
+        }
     }
 
     private void startKeycloakLogin() {
