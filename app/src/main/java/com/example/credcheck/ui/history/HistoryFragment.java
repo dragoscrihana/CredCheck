@@ -52,7 +52,6 @@ public class HistoryFragment extends Fragment {
     private void fetchTransactions(View root) {
         AuthManager.getFreshAccessToken(requireContext(), (accessToken, authState) -> {
             if (accessToken == null) {
-                // handle token refresh failure (optional: redirect to login)
                 return;
             }
 
@@ -166,18 +165,12 @@ public class HistoryFragment extends Fragment {
         pieChart.setCenterText("Credential Stats");
         pieChart.setCenterTextSize(16f);
         pieChart.setCenterTextColor(getColorBasedOnTheme());
+        pieChart.setEntryLabelTextSize(10f);
+        pieChart.setEntryLabelColor(getColorBasedOnTheme());
         pieChart.getDescription().setEnabled(false);
 
-        Legend legend = pieChart.getLegend();
-        legend.setEnabled(true);
-        legend.setTextColor(getColorBasedOnTheme());
-        legend.setTextSize(14f);
-        legend.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
-        legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
-        legend.setOrientation(Legend.LegendOrientation.HORIZONTAL);
-        legend.setXEntrySpace(20f);
-        legend.setDrawInside(false);
-
+        pieChart.getLegend().setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
+        pieChart.getLegend().setTextColor(getColorBasedOnTheme());
         pieChart.invalidate();
     }
 
